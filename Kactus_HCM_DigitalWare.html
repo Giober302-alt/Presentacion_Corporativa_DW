@@ -327,10 +327,10 @@ img{max-width:100%;height:auto;display:block}
 .etb-card-btn{align-self:flex-start;font-size:.7rem;font-weight:700;padding:.42rem .95rem;border-radius:10px;background:var(--navy);color:#fff;border:none;transition:background .15s}
 .etb-card-btn:hover{background:var(--blue);color:#fff}
 
-#etbModal .modal-content{border-radius:18px;border:none;overflow:hidden}
-#etbModal .modal-header,#etbModal .modal-footer{border-color:var(--light)}
-#etbModal .modal-title{font-family:'Nunito',sans-serif;font-weight:800;color:var(--navy);font-size:1rem}
-#etbModal .etb-modal-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 100%);margin-bottom:1rem}
+.etb-card.is-clickable{cursor:pointer}
+/* Tarjetas de Personalización ETB simplificadas: solo imagen + nombre, centrado */
+#etbGrid .etb-card-body{align-items:center;text-align:center;justify-content:center}
+#etbGrid .etb-card-name{margin-bottom:0}
 
 /* ---- Responsive: ajuste fino de la imagen de las tarjetas ETB en móvil ---- */
 @media(max-width:576px){
@@ -1714,22 +1714,6 @@ buildGrid(); buildOpViews();
   </div>
 </div>
 
-<!-- ═══════ MODAL: detalle de desarrollo Personalización ETB (Bootstrap 5) ═══════ -->
-<div class="modal fade" id="etbModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="etbModalTitle"></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-      </div>
-      <div class="modal-body">
-        <div class="etb-modal-icon" id="etbModalIcon"></div>
-        <p id="etbModalDesc" style="font-size:.85rem;color:var(--text);line-height:1.7;margin:0"></p>
-      </div>
-    </div>
-  </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <!-- ══════════════════════════════════════════════════════════════
      NUEVO — Bloque de guion independiente para las secciones
@@ -1776,12 +1760,7 @@ const ALLY_CATS = [
   },
   { key:'nomina_elec', icon:'🧾', title:'Nómina Electrónica', color:'#6c3fc5', bg:'rgba(108,63,197,.1)',
     items:[
-      { name:'Cadena', desc:'Proveedor tecnológico autorizado para la generación de nómina electrónica ante la DIAN', img:'nominaelec' },
-      { name:'Facture', desc:'Proveedor tecnológico autorizado para la generación de nómina electrónica ante la DIAN', img:'nominaelec' },
-      { name:'Cenet', desc:'Proveedor tecnológico autorizado para la generación de nómina electrónica ante la DIAN', img:'nominaelec' },
-      { name:'Carvajal', desc:'Proveedor tecnológico autorizado para la generación de nómina electrónica ante la DIAN', img:'nominaelec' },
-      { name:'Mentum', desc:'Proveedor tecnológico autorizado para la generación de nómina electrónica ante la DIAN', img:'nominaelec' },
-      { name:'FyM', desc:'Proveedor tecnológico autorizado para la generación de nómina electrónica ante la DIAN', img:'nominaelec' }
+      { name:'Nómina Electrónica', desc:'Red de proveedores tecnológicos autorizados ante la DIAN: Cadena, Facture, Cenet, Carvajal, Mentum y FyM', img:'nominaelec' }
     ]
   },
   { key:'recobro', icon:'🏥', title:'Recobro de Incapacidades', color:'#c0392b', bg:'rgba(192,57,43,.1)',
@@ -1805,13 +1784,24 @@ const ALLY_CATS = [
 function buildAllyCategories(){
   document.getElementById('allyCategoryView').innerHTML = ALLY_CATS.map(function(cat){
     var n = cat.items.length;
+    // Categorías con un único aliado abren la imagen directamente (Categoría → Imagen).
+    // Categorías con varios aliados (p. ej. Libranzas y Anticipos) conservan el listado intermedio.
+    var isDirect = n === 1;
+    var hasImg = isDirect && !!cat.items[0].img;
+    var action = isDirect
+      ? (hasImg ? "openAllyModal('"+cat.key+"',0)" : '')
+      : "openAllyCategory('"+cat.key+"')";
+    var btnLabel = isDirect ? '🖼️ Ver imagen' : 'Ver alianzas';
+    var btnHtml = action
+      ? '<button type="button" class="etb-card-btn" onclick="event.stopPropagation();'+action+'">'+btnLabel+'</button>'
+      : '<button type="button" class="etb-card-btn" disabled>Sin imagen</button>';
     return '<div class="col">'
-         +   '<div class="etb-card">'
+         +   '<div class="etb-card'+(action?' is-clickable':'')+'"'+(action?' onclick="'+action+'"':'')+'>'
          +     '<div class="etb-card-img" style="background:'+cat.color+'">'+cat.icon+'</div>'
          +     '<div class="etb-card-body">'
          +       '<div class="etb-card-name">'+cat.title+'</div>'
          +       '<div class="etb-card-desc">'+n+' aliado'+(n>1?'s':'')+' certificado'+(n>1?'s':'')+' integrado'+(n>1?'s':'')+' con Kactus HCM</div>'
-         +       '<button type="button" class="etb-card-btn" onclick="openAllyCategory(\''+cat.key+'\')">Ver alianzas</button>'
+         +       btnHtml
          +     '</div>'
          +   '</div>'
          + '</div>';
@@ -1904,7 +1894,7 @@ const ETB_DEVS = [
   { icon:'💰', name:'Cesantías', desc:'Cálculo, consignación y reporte de cesantías conforme a la normativa colombiana.' },
   { icon:'🎁', name:'Primas', desc:'Liquidación automática de primas legales y extralegales del personal de ETB.' },
   { icon:'🏖️', name:'Vacaciones', desc:'Solicitud, aprobación y liquidación del periodo de vacaciones de los colaboradores.' },
-  { icon:'📋', name:'Registro Tradicional', desc:'Registro histórico de novedades bajo el esquema tradicional definido para ETB.' },
+  { icon:'📋', name:'Régimen Tradicional de Cesantías', desc:'Registro histórico de novedades bajo el esquema tradicional definido para ETB.' },
   { icon:'🔗', name:'Interfaz SAP', desc:'Integración bidireccional entre Kactus HCM y el ERP SAP corporativo de ETB.' },
   { icon:'🗂️', name:'Módulo FD', desc:'Desarrollo a la medida del módulo FD para procesos específicos de la operación de ETB.' },
   { icon:'📄', name:'Liquidaciones Definitivas', desc:'Cálculo automatizado de la liquidación definitiva de contrato al momento del retiro.' },
@@ -1914,28 +1904,17 @@ const ETB_DEVS = [
 
 // ── Construye la grilla de tarjetas de Personalización ETB dentro de #etbGrid ──
 function buildETB(){
-  document.getElementById('etbGrid').innerHTML = ETB_DEVS.map(function(d,i){
+  // Tarjeta simplificada: únicamente imagen (icono representativo) y nombre del desarrollo.
+  document.getElementById('etbGrid').innerHTML = ETB_DEVS.map(function(d){
     return '<div class="col">'
          +   '<div class="etb-card">'
          +     '<div class="etb-card-img">'+d.icon+'</div>'
          +     '<div class="etb-card-body">'
          +       '<div class="etb-card-name">'+d.name+'</div>'
-         +       '<div class="etb-card-desc">'+d.desc+'</div>'
-         +       '<button type="button" class="etb-card-btn" onclick="openEtbDetail('+i+')">Ver detalle</button>'
          +     '</div>'
          +   '</div>'
          + '</div>';
   }).join('');
-}
-
-// ── Abre el modal de detalle de un desarrollo de Personalización ETB ──
-function openEtbDetail(idx){
-  var d = ETB_DEVS[idx];
-  if(!d) return;
-  document.getElementById('etbModalIcon').textContent = d.icon;
-  document.getElementById('etbModalTitle').textContent = d.name;
-  document.getElementById('etbModalDesc').textContent = d.detail || d.desc;
-  bootstrap.Modal.getOrCreateInstance(document.getElementById('etbModal')).show();
 }
 
 // ── Inicializa ambas secciones nuevas ──
